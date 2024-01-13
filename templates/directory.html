@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Directory</title>
+</head>
+<body>
+    <h1>Directory: {{ directory }}</h1>
+    <h2>Videos:</h2>
+    <ul>
+        {% for video in video_files %}
+            <li><a href="/play_video/{{ directory }}/{{ video }}">{{ video }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Images:</h2>
+    <ul>
+        {% for image in image_files %}
+            <li><a href="/show_image/{{ directory }}/{{ image }}"><img src="/show_image/{{ directory }}/{{ image }}" alt="{{ image }}" width="150" height="150"></a></li>
+        {% endfor %}
+    </ul>
+    <h2>Subdirectories:</h2>
+    <ul>
+        {% for entry in entries %}
+            <li><a href="/directory?dir={{ directory }}/{{ entry }}">{{ entry }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
