@@ -4,6 +4,8 @@ import yaml
 
 app = Flask(__name__, static_url_path='/static')
 
+cfg_check_list = ['usr', 'pwd', 'dir', 'host', 'port', 'key', 'only_media']
+
 # load yaml config
 if not os.path.isfile('config.yaml'):
     print("Config file not found. Creating default config.yaml")
@@ -13,10 +15,12 @@ if not os.path.isfile('config.yaml'):
         f.write('dir: /home/pi/Videos\n')
         f.write('host: 0.0.0.0\n')
         f.write('port: 5000\n')
+        f.write('key: SECRET_KEY\n')
         f.write('only_media: True\n')
 
 with open('config.yaml', 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
+    assert all(key in config for key in cfg_check_list) , "Invalid config.yaml! Please check if config.yaml contains all of the following keys: " + str(cfg_check_list)
     USERNAME = config['usr']
     PASSWORD = config['pwd']
     BASE_DIR = config['dir']
