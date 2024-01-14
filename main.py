@@ -21,6 +21,11 @@ if not os.path.isfile('config.yaml'):
 with open('config.yaml', 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
     assert all(key in config for key in cfg_check_list) , "Invalid config.yaml! Please check if config.yaml contains all of the following keys: " + str(cfg_check_list)
+    assert all([type(config['usr']) == str, type(config['pwd']) == str, type(config['dir']) == str, type(config['host']) == str, type(config['port']) == int, type(config['key']) == str, type(config['only_media']) == bool]), "Invalid config.yaml! Please check if config.yaml contains valid data types"
+    assert os.path.isdir(config['dir']), "Invalid config.yaml! Please check if config.yaml contains a valid directory path"
+    assert config['port'] > 0 and config['port'] < 65535, "Invalid config.yaml! Please check if config.yaml contains a valid port number"
+    assert len(config['host'].split('.')) == 4, "Invalid config.yaml! Please check if config.yaml contains a valid host address"
+    assert all([int(x)>=0 and int(x)<=255 for x in config['host'].split('.')]), "Invalid config.yaml! Please check if config.yaml contains a valid host address"
     USERNAME = config['usr']
     PASSWORD = config['pwd']
     BASE_DIR = config['dir']
