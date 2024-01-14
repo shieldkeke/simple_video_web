@@ -1,16 +1,33 @@
 from flask import Flask, render_template, request, send_from_directory, session, redirect, url_for
 import os
+import yaml
 
 app = Flask(__name__)
 
-USERNAME = 'admin'
-PASSWORD = 'admin'
-BASE_DIR = 'MY_FOLDER_PATH'  
-PORT = 5000
-app.config['SECRET_KEY'] = '_MY_SECRET_KEY_' 
+# load yaml config
+if not os.path.isfile('config.yaml'):
+    print("Config file not found. Creating default config.yaml")
+    with open('config.yaml', 'w') as f:
+        f.write('usr: admin\n')
+        f.write('pwd: admin\n')
+        f.write('dir: /home/pi/Videos\n')
+        f.write('host: 0.0.0.0\n')
+        f.write('port: 5000\n')
+        
+with open('config.yaml', 'r') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+    USERNAME = config['usr']
+    PASSWORD = config['pwd']
+    BASE_DIR = config['dir']
+    HOST = config['host']
+    PORT = config['port']
+    app.config['SECRET_KEY'] = config['key']
 
 def authenticate(username, password):
     return username == USERNAME and password == PASSWORD
+
+def child_dir(path):
+    return os.path.abspath(path).startswith(os.path.abspath(BASE_DIR))
 
 @app.route('/')
 def index():
@@ -32,9 +49,12 @@ def show_directory():
         directory_path = BASE_DIR + '/' + directory
     else:
         directory_path = BASE_DIR
+
     if not os.path.isdir(directory_path):
         return f"Directory not found: {directory_path}"
-
+    if not child_dir(BASE_DIR):
+        return f"Invalid directory path: {directory_path}"
+    
     entries = os.listdir(directory_path)
 
     video_files = [entry for entry in entries if entry.endswith(('.mp4', '.avi', '.mkv'))]
@@ -84,4 +104,4 @@ def logout():
 #             return 'Unauthorized', 401
 
 if __name__ == '__main__':
-    app.run(port=PORT)
+    app.run(port=PORT, host=HOST)
