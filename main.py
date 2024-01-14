@@ -13,7 +13,7 @@ if not os.path.isfile('config.yaml'):
         f.write('dir: /home/pi/Videos\n')
         f.write('host: 0.0.0.0\n')
         f.write('port: 5000\n')
-        
+
 with open('config.yaml', 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
     USERNAME = config['usr']
@@ -28,6 +28,16 @@ def authenticate(username, password):
 
 def child_dir(path):
     return os.path.abspath(path).startswith(os.path.abspath(BASE_DIR))
+
+def get_type_video(filename):
+    if filename.endswith('.mp4'):
+        return 'video/mp4'
+    elif filename.endswith('.avi'):
+        return 'video/avi'
+    elif filename.endswith('.mkv'):
+        return 'video/mkv'
+    else:
+        return 'video/mp4'
 
 @app.route('/')
 def index():
@@ -67,7 +77,9 @@ def show_directory():
 def play_video(filename):
     if 'username' not in session:
         return redirect(url_for('login'))
-    return send_from_directory(BASE_DIR, filename)
+    type_video = get_type_video(filename)
+    return render_template('video.html', filename=BASE_DIR + '/' + filename, type_video = type_video) # if you want to play video with a player, use Video.js
+    # return send_from_directory(BASE_DIR, filename) # if simply want to play with a html5 video tag
 
 
 @app.route('/show_image/<path:filename>')
@@ -96,12 +108,6 @@ def login():
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
-
-# @app.before_request
-# def require_auth():
-#     if request.path.startswith('/directory') or request.path.startswith('/play_video') or request.path.startswith('/show_image'):
-#         if not request.authorization or not authenticate(request.authorization.username, request.authorization.password):
-#             return 'Unauthorized', 401
 
 if __name__ == '__main__':
     app.run(port=PORT, host=HOST)
