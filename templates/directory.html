@@ -2,9 +2,12 @@
 <html>
 <head>
     <title>Directory</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <h1>Directory: {{ directory }}</h1>
+
+    {% if only_media %}
     <h2>Videos:</h2>
     <ul>
         {% for video in video_files %}
@@ -23,6 +26,21 @@
             <li><a href="/directory?dir={{ directory }}/{{ entry }}">{{ entry }}</a></li>
         {% endfor %}
     </ul>
+    {% else %}
+    <h2>Subdirectories:</h2>
+    <ul>
+        {% for entry in entries %}
+            <li><a href="/directory?dir={{ directory }}/{{ entry }}">{{ entry }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Files:</h2>
+    <ul>
+        {% for file in files %}
+            <li><a href="/file/{{ directory }}/{{ file }}">{{ file }}</a></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <a href="/change_display_mode?dir={{ directory }}">Change Display Mode</a>
     <a href="{{ url_for('logout') }}">Logout</a>
 </body>
 </html>

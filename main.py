@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_from_directory, session,
 import os
 import yaml
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 # load yaml config
 if not os.path.isfile('config.yaml'):
@@ -13,6 +13,7 @@ if not os.path.isfile('config.yaml'):
         f.write('dir: /home/pi/Videos\n')
         f.write('host: 0.0.0.0\n')
         f.write('port: 5000\n')
+        f.write('only_media: True\n')
 
 with open('config.yaml', 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -22,6 +23,8 @@ with open('config.yaml', 'r') as f:
     HOST = config['host']
     PORT = config['port']
     app.config['SECRET_KEY'] = config['key']
+    global only_media
+    only_media = config['only_media']
 
 def authenticate(username, password):
     return username == USERNAME and password == PASSWORD
@@ -45,6 +48,17 @@ def index():
         return redirect(url_for('show_directory'))
     return render_template('index.html')
 
+@app.route('/change_display_mode')
+def change_display_mode():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    directory = request.args.get('dir')
+    if directory is None:
+        directory = ''
+    global only_media
+    only_media = not only_media
+    return redirect(f'/directory?dir={directory}')
+
 @app.route('/directory')
 def show_directory():
     
@@ -67,19 +81,35 @@ def show_directory():
     
     entries = os.listdir(directory_path)
 
-    video_files = [entry for entry in entries if entry.endswith(('.mp4', '.avi', '.mkv'))]
-    image_files = [entry for entry in entries if entry.endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-    dirs = [entry for entry in entries if os.path.isdir(directory_path + '/' + entry)]
+    global only_media
+    if only_media:
+        video_files = [entry for entry in entries if entry.endswith(('.mp4', '.avi', '.mkv'))]
+        image_files = [entry for entry in entries if entry.endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+        dirs = [entry for entry in entries if os.path.isdir(directory_path + '/' + entry)]
+        return render_template('directory.html', only_media=only_media, directory=directory, video_files=video_files, image_files=image_files, entries=dirs)
+    else:
+        files = [entry for entry in entries if os.path.isfile(directory_path + '/' + entry)]
+        dirs = [entry for entry in entries if os.path.isdir(directory_path + '/' + entry)]
+        return render_template('directory.html', only_media=only_media, directory=directory, entries=dirs, files=files)
 
-    return render_template('directory.html', directory=directory, video_files=video_files, image_files=image_files, entries=dirs)
+@app.route('/file/<path:filename>')
+def show_file(filename):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return send_from_directory(BASE_DIR, filename)
 
 @app.route('/play_video/<path:filename>')
 def play_video(filename):
     if 'username' not in session:
         return redirect(url_for('login'))
     type_video = get_type_video(filename)
-    return render_template('video.html', filename=BASE_DIR + '/' + filename, type_video = type_video) # if you want to play video with a player, use Video.js
-    # return send_from_directory(BASE_DIR, filename) # if simply want to play with a html5 video tag
+    return render_template('video.html', filedir=BASE_DIR + '/' + filename, filename = filename, type_video = type_video) # if you want to play video with a player, use Video.js
+   
+@app.route('/raw_video/<path:filename>')
+def raw_video(filename):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return send_from_directory(BASE_DIR, filename) 
 
 
 @app.route('/show_image/<path:filename>')
