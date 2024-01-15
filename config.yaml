@@ -1,0 +1,7 @@
+usr: admin
+pwd: admin
+dir: C://
+host: 0.0.0.0
+port: 5000
+key: SECRET_KEY
+only_media: True

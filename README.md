@@ -1,7 +1,7 @@
 # simple_video_web
 A simple implementation of the local video display website
 
-You need to change `USERNAME`, `PASSWORD`, `BASE_DIR` and `app.config['SECRET_KEY']` in main.py
+You need to write your own `config.yaml` file by referring to the `arg.py` file
 
 after install `flask` in python, you can simply run 
 
